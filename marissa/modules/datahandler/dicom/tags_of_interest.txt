@@ -1,0 +1,105 @@
+##############################################################
+# T A G S   O F   I N T E R E S T   ( T O I ) ################
+##############################################################
+(address)   Parameter   Meaning
+
+# START
+(0008,0070)	x	Manufacturer
+(0010,0040)	x	Patient's Sex
+(0010,1010)	x	Patient's Age
+(0010,1020)	x	Patient's Size
+(0010,1030)	x	Patient's Weight
+(0018,0015)	x	Body Part Examined
+(0018,0020)	x	Scanning Sequence
+(0018,0021)	x	Sequence Variant
+(0018,0022)	x	Scan Options
+(0018,0023)	x	MR Acquisition Type
+(0018,0050)	x	Slice Thickness
+(0018,0080)		Repetition Time
+(0018,0081)		Echo Time
+(0018,0082)		Inversion Time
+(0018,0087)	x	Magnetic Field Strength
+(0018,0088)		Spacing Between Slices
+(0018,0089)	x	Number of Phase Encoding Steps
+(0018,0093)	x	Percent Sampling
+(0018,0094)	x	Percent Phase Field of View
+(0018,0095)	x	Pixel Bandwidth
+(0018,1020)	x	Software Version(s)
+(0018,1050)	x	Spatial Resolution
+(0018,1060)		Trigger Time
+(0018,1310)	x	Acquisition Matrix
+(0018,1314)	x	Flip Angle
+(0018,1315)	x	Variable Flip Angle Flag
+(0028,0030)	x	Pixel Spacing
+(0020,0013)		Instance Number
+(0028,1050)		Window Center
+(0028,1051)		Window Width
+(0028,1052)		RescaleIntercept
+(0028,1053)		RescaleSlope
+(0028,1054)		RescaleType
+(0008,0008)		Image Type
+# END
+
+##############################################################
+##############################################################
+##############################################################
+
+--------------------------------------------------------------
+
+##############################################################
+# B E L O W   I S   U N U S E D ##############################
+##############################################################
+
+
+# Further Tags
+(0008,0060)	x	Modality
+(0010,1022)	x	Patient's Body Mass Index
+(0018,0024)	x	Sequence Name
+(0018,0083)	x	Number of Averages
+(0018,0084)	x	Imaging Frequency
+(0018,0086)	x	Echo Number(s)
+(0018,0091)	x	Echo Train Length
+(0018,1088)	x	Heart Rate
+(0018,1250)	x	Receive Coil Name
+(0018,1251)	x	Transmit Coil Name
+(0018,1318)	x	dB/dt (gradient coil rate of magn. flux dens.)
+(0028,0002)	x	Samples per Pixel
+(0028,0034)	x	PixelAspectRatio
+(0018,1320)	x	B1rms
+(0008,0032)	    Acquisition Time
+(0010,21C0)	    Pregnancy Status
+(0014,401A)	    Nominal Frequency
+(0014,401B)	    Measured Center Frequency
+(0014,401C)	    Measured Bandwidth
+(0014,4022)	    Pulse Width
+(0014,4024)	    Excitation Frequency
+(0014,4026)	    Modulation Type
+(0018,1088)	    Heart Rate
+(0018,0010)	    Contrast/Bolus Agent
+(0018,0012)	    Contrast/Bolus Agent Sequence
+(0018,0013)	    Contrast/Bolus T1 Relaxivity
+(7FE0,0008)	    Float Pixel Data
+(7FE0,0009)	    Double Float Pixel Data
+(0028,0004)	    Photometric Interception
+(0028,0010)	    Rows
+(0028,0011)	    Columns
+(0028,0100)	    Bits Allocated
+(0028,0103)	    Pixel Representation
+(7FE0,0010)	    Pixel Data
+
+# ROI Tags
+(0020,0032)	Image Position
+(0020,0037)	Direction Cosine
+(0020,0052)	Frame of Reference UID
+(3006,0002)	Structure Set Label
+(3006,0004)	Structure Set Name
+(3006,0006)	Structure Set Description
+(3006,0008)	Structure Set Date
+(3006,0009)	Structure Set Time
+(3006,0010)	Reference Frame of Reference Sequence
+(3006,0020)	Structure Set ROI Sequence
+(3006,0039)	ROI Contour Sequence
+
+##############################################################
+##############################################################
+##############################################################
