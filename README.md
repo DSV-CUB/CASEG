@@ -1,11 +1,11 @@
 # CASEG - cascaded segmentation
 
-##Preparation
+## Preparation
 In order to use the scripts, please make sure:
 - install Python 3.8 and the required site packages, please have a look for the installation of rasterio under Windows below (other OS are not tested)
 - the data is given as <SOPInstanceUID>.dcm (dicom image) and <SOPInstanceUID>.pickle (reference segmentation) in the same directory
 
-##Installation
+## Installation
 - Download and install Python 3.8 from https://www.python.org/downloads/
 - install rasterio (instructions work for Windows 10):
     - download and install GDAL from https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows
@@ -15,7 +15,7 @@ In order to use the scripts, please make sure:
     - restart the PC
 - pip install the requirements.txt
 
-##Reference segmentation
+## Reference segmentation
 The binary pickle file contains the reference segmentation with the following structure:
 
 segmentationdata = dict{saepicardialContour, saendocardialContour}
