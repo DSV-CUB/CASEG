@@ -1,14 +1,11 @@
 import os
-import pickle
 import copy
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy import stats
-from matplotlib.ticker import MultipleLocator
 
 from marissa.toolbox import tools
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
-from CASEG.plots import t1_disjoint_comparison
+
 
 def subplot_example_case(data, expectations, predictions, expectations_values, predictions_values, indeces, indece_index, ax, set_alpha, is_native=True, model_num=-1):
     image = data.x[indeces[indece_index]]
@@ -64,25 +61,8 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
     plt.plot([0, 1], [0.5, 0.5], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
 
     subfigs[0].supylabel("native", fontsize=24, fontweight='bold')
-    subfigs[1].supylabel("post contrast agent", fontsize=24, fontweight='bold')
+    subfigs[1].supylabel("contrast enhanced", fontsize=24, fontweight='bold')
 
-
-
-
-
-    #cols = 8
-    #rows = 4
-
-    #fig = plt.figure(None, figsize=(cols*5, rows*5), constrained_layout=True)
-    #subfigs = fig.subfigures(1, 2) #, width_ratios = [1] * 2, height_ratios = [1] * 2)
-    #separating line
-
-
-    #axes_sf0 = subfigs[0].subplots(4,4, gridspec_kw={'width_ratios': [1] * 4, 'height_ratios': [1] * 4})
-    #axes_sf1 = subfigs[1].subplots(4,4, gridspec_kw={'width_ratios': [1] * 4, 'height_ratios': [1] * 4})
-    #axes = np.hstack((axes_sf0, axes_sf1))
-
-    #plt.plot([0.5, 0.5], [0, 1], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
 
     subfigs[0].suptitle(" ", fontsize=4, fontweight='bold')
     subfigs[1].suptitle(" ", fontsize=4, fontweight='bold')
@@ -90,7 +70,6 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
     axes[0,0].set_ylabel("good case", fontsize=20)
     axes[1,0].set_ylabel("improvement case", fontsize=20)
     axes[2,0].set_ylabel("bad case", fontsize=20)
-    #axes[3,0].set_ylabel("crinU vs. expert\nsegmentation", fontsize=20)
 
     axes[0,0].set_title("original image", fontsize=20, fontweight='bold')
     axes[0,1].set_title("refU", fontsize=20, fontweight='bold')
@@ -102,23 +81,9 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
     axes[0,6].set_title("cropU", fontsize=20, fontweight='bold')
     axes[0,7].set_title("crinU", fontsize=20, fontweight='bold')
 
-    #axes[0,7].yaxis.set_label_position("right")
-    #axes[1,7].yaxis.set_label_position("right")
-    #axes[2,7].yaxis.set_label_position("right")
-    #axes[3,7].yaxis.set_label_position("right")
-
-    #axes[0,7].set_ylabel("original\nimage", fontsize=20)
-    #axes[1,7].set_ylabel("refU vs. expert\nsegmentation", fontsize=20)
-    #axes[2,7].set_ylabel("cropU vs. expert\nsegmentation", fontsize=20)
-    #axes[3,7].set_ylabel("crinU vs. expert\nsegmentation", fontsize=20)
-
     axes[0,4].set_ylabel("good case", fontsize=20)
     axes[1,4].set_ylabel("improvement case", fontsize=20)
     axes[2,4].set_ylabel("bad case", fontsize=20)
-    #axes[3,4].set_ylabel("crinU vs. expert\nsegmentation", fontsize=20)
-
-
-
 
     # native
     dscs = []
@@ -129,9 +94,9 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
         hds_model = []
         t1e_model = []
         for i in range(len(expectations[j])):
-            dscs_model.append(tools.tool_general.get_metric_from_masks(expectations[j][i], predictions[2][i], "DSC"))
-            hds_model.append(tools.tool_general.get_metric_from_masks(expectations[j][i], predictions[2][i], "HD", voxel_sizes=data.pixel_spacing[indeces[i]]))
-            t1e_model.append(predictions_values[2][i] - expectations_values[j][i])
+            dscs_model.append(tools.tool_general.get_metric_from_masks(expectations[j][i], predictions[j][i], "DSC"))
+            hds_model.append(tools.tool_general.get_metric_from_masks(expectations[j][i], predictions[j][i], "HD", voxel_sizes=data.pixel_spacing[indeces[i]]))
+            t1e_model.append(predictions_values[j][i] - expectations_values[j][i])
         dscs.append(dscs_model)
         hds.append(hds_model)
         t1e.append(t1e_model)
@@ -144,7 +109,14 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
     subplot_example_case(data, expectations, predictions, expectations_values, predictions_values, indeces, index, axes[0,3], set_alpha, is_native=True, model_num=2)
 
     # native improvement
-    index = np.argmax(np.abs(np.array(dscs[2])-np.array(dscs[0])))
+    index1 = np.argmin((np.abs(t1e[1])-np.abs(t1e[0])))
+    index2 = np.argmin((np.abs(t1e[2])-np.abs(t1e[0])))
+
+    if np.max((np.array(dscs[1])-np.array(dscs[0]))) > np.max((np.array(dscs[2])-np.array(dscs[0]))):
+        index = index1
+    else:
+        index = index2
+
     subplot_example_case(data, expectations, predictions, expectations_values, predictions_values, indeces, index, axes[1,0], set_alpha, is_native=True, model_num=-1)
     subplot_example_case(data, expectations, predictions, expectations_values, predictions_values, indeces, index, axes[1,1], set_alpha, is_native=True, model_num=0)
     subplot_example_case(data, expectations, predictions, expectations_values, predictions_values, indeces, index, axes[1,2], set_alpha, is_native=True, model_num=1)
@@ -173,9 +145,9 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
         hds_pca_model = []
         t1e_pca_model = []
         for i in range(len(expectations_pca[j])):
-            dscs_pca_model.append(tools.tool_general.get_metric_from_masks(expectations_pca[j][i], predictions_pca[2][i], "DSC"))
-            hds_pca_model.append(tools.tool_general.get_metric_from_masks(expectations_pca[j][i], predictions_pca[2][i], "HD", voxel_sizes=data.pixel_spacing[indeces_pca[i]]))
-            t1e_pca_model.append(predictions_values_pca[2][i] - expectations_values_pca[j][i])
+            dscs_pca_model.append(tools.tool_general.get_metric_from_masks(expectations_pca[j][i], predictions_pca[j][i], "DSC"))
+            hds_pca_model.append(tools.tool_general.get_metric_from_masks(expectations_pca[j][i], predictions_pca[j][i], "HD", voxel_sizes=data.pixel_spacing[indeces_pca[i]]))
+            t1e_pca_model.append(predictions_values_pca[j][i] - expectations_values_pca[j][i])
         dscs_pca.append(dscs_pca_model)
         hds_pca.append(hds_pca_model)
         t1e_pca.append(t1e_pca_model)
@@ -188,7 +160,14 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
     subplot_example_case(data, expectations_pca, predictions_pca, expectations_values_pca, predictions_values_pca, indeces_pca, index, axes[0,7], set_alpha, is_native=False, model_num=2)
 
     # pca improvement
-    index = np.argmax(np.abs(np.array(dscs_pca[2])-np.array(dscs_pca[0])))
+    index1 = np.argmax((np.array(dscs_pca[1])-np.array(dscs_pca[0])))
+    index2 = np.argmax((np.array(dscs_pca[2])-np.array(dscs_pca[0])))
+
+    if np.max((np.array(dscs_pca[1])-np.array(dscs_pca[0]))) > np.max((np.array(dscs_pca[2])-np.array(dscs_pca[0]))):
+        index = index1
+    else:
+        index = index2
+
     subplot_example_case(data, expectations_pca, predictions_pca, expectations_values_pca, predictions_values_pca, indeces_pca, index, axes[1,4], set_alpha, is_native=False, model_num=-1)
     subplot_example_case(data, expectations_pca, predictions_pca, expectations_values_pca, predictions_values_pca, indeces_pca, index, axes[1,5], set_alpha, is_native=False, model_num=0)
     subplot_example_case(data, expectations_pca, predictions_pca, expectations_values_pca, predictions_values_pca, indeces_pca, index, axes[1,6], set_alpha, is_native=False, model_num=1)
@@ -217,9 +196,13 @@ def plot_example_cases(expectations, predictions, indeces, expectations_values, 
 
 
 if __name__ == "__main__":
-    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
-    path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\cases_examples.jpg"
+    #path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
+    #path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
+    #path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\cases_examples.jpg"
+
+    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+    path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\Figure 3 - Example results of the automated segmentation in refU, cropU and crinU.jpg"
 
     do_tight = False
 

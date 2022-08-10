@@ -8,12 +8,13 @@ from matplotlib.ticker import MultipleLocator
 
 from marissa.toolbox import tools
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
-from CASEG.plots import metric_boxplot
+from CASEG.plots import t1_disjoint_histogram
+from CASEG.plots import t1_omDSC_plot
 
-path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
-path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\geometric_boxplot_DSC_HD.jpg"
-metrics = ["DSC", "HD"]
+path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\Figure 6 - Coherence analysis of the automated segmentation.jpg"
+equivalence_margin=24.5
 
 models = []
 models_names = []
@@ -107,26 +108,8 @@ information_native = {"models_name": models_names,
 cols = 3
 rows = 3.75
 
-fig = plt.figure(None, figsize=(cols*5, rows*5), constrained_layout=True)
+fig = plt.figure(None, figsize=(cols*5, rows*5), constrained_layout=True, dpi=300)
 subfigs = fig.subfigures(2, 1)#, width_ratios = [0.05, 1, 1, 0.05], height_ratios = [1, 1, 1])
-#subfigs[0,1].suptitle("native", fontsize=24, fontweight='bold')
-#subfigs[0,2].suptitle("post contrast agent", fontsize=24, fontweight='bold')
-
-
-#axes = None
-#for i in range(len(information["models_name"])):
-#    subfigs[i,0].supylabel(information["models_name"][i], fontsize=24, fontweight="bold")
-#    subfigs[i,3].supylabel(" ", fontsize=24, fontweight="bold")
-    #subfigs[i,1].supylabel("\n" + information["models_name"][i], fontsize=24, fontweight="bold", x=0.98)
-#
-#    axes_sf0 = subfigs[i,1].subplots(1,2, gridspec_kw={'width_ratios': [1] * 2, 'height_ratios': [1] * 1})
-#    axes_sf1 = subfigs[i,2].subplots(1,2, gridspec_kw={'width_ratios': [1] * 2, 'height_ratios': [1] * 1})
-#    if axes is None:
-#        axes = np.hstack((axes_sf0, axes_sf1))
-#    else:
-#        axes = np.vstack((axes, np.hstack((axes_sf0, axes_sf1))))
-
-#separating line
 
 
 axes_sf0 = subfigs[0].subplots(2,3, gridspec_kw={'width_ratios': [1] * 3, 'height_ratios': [1] * 2})
@@ -135,7 +118,7 @@ axes = np.vstack((axes_sf0, axes_sf1))
 
 
 subfigs[0].supylabel("native", fontsize=24, fontweight="bold")
-subfigs[1].supylabel("post contrast agent", fontsize=24, fontweight="bold")
+subfigs[1].supylabel("contrast enhanced", fontsize=24, fontweight="bold")
 axes[0,0].set_title("refU", fontsize=24, fontweight="bold")
 axes[0,1].set_title("cropU", fontsize=24, fontweight="bold")
 axes[0,2].set_title("crinU", fontsize=24, fontweight="bold")
@@ -147,52 +130,12 @@ plt.plot([0, 1], [0.5, 0.5], color='black', lw=1, transform=plt.gcf().transFigur
 
 
 
-for i in range(2):
-    metric_boxplot.plot(information_native, axes[i,:].flatten(), metric=metrics[i], voxel_sizes=np.array(data.pixel_spacing)[indeces_native])
-    metric_boxplot.plot(information_pca, axes[i+2,:].flatten(), metric=metrics[i], voxel_sizes=np.array(data.pixel_spacing)[indeces_pca])
+t1_omDSC_plot.plot(information_native, axes[0,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
+t1_disjoint_histogram.plot(information_native, axes[1,:].flatten(), bounds=[500, 2000])
 
-for i in range(len(information["models_name"])):
-    a = 0
-    b = i
-    axes[a, b].set_ylim(0, 100)
-    axes[a, b].set(adjustable='box', aspect=0.005)#'equal')
-    axes[a, b].yaxis.set_minor_locator(MultipleLocator(10))
-    axes[a, b].grid(True, axis="y", which="both", ls=":")
-    axes[a, b].set_ylabel("DSC in %", fontsize=16)
-    axes[a, b].tick_params(axis='both', which='major', labelsize=14)
+t1_omDSC_plot.plot(information_pca, axes[2,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
+t1_disjoint_histogram.plot(information_pca, axes[3,:].flatten(), bounds=[250, 650])
 
-    a = 1
-    b = i
-    axes[a, b].set_ylim(0, 12.5)
-    axes[a, b].set(adjustable='box', aspect=0.04)#'equal')
-    axes[a, b].yaxis.set_minor_locator(MultipleLocator(1))
-    axes[a, b].grid(True, axis="y", which="both", ls=":")
-    axes[a, b].set_ylabel("HD in mm", fontsize=16)
-    axes[a, b].tick_params(axis='both', which='major', labelsize=14)
-
-    a = 2
-    b = i
-    axes[a, b].set_ylim(0, 100)
-    axes[a, b].set(adjustable='box', aspect=0.005)#'equal')
-    axes[a, b].yaxis.set_minor_locator(MultipleLocator(10))
-    axes[a, b].grid(True, axis="y", which="both", ls=":")
-    axes[a, b].set_ylabel("DSC in %", fontsize=16)
-    axes[a, b].tick_params(axis='both', which='major', labelsize=14)
-    #axes[a, b].yaxis.set_label_position("right")
-    #axes[a, b].yaxis.tick_right()
-
-    a = 3
-    b = i
-    axes[a, b].set_ylim(0, 12.5)
-    axes[a, b].set(adjustable='box', aspect=0.04)#'equal')
-    axes[a, b].yaxis.set_minor_locator(MultipleLocator(1))
-    axes[a, b].grid(True, axis="y", which="both", ls=":")
-    axes[a, b].set_ylabel("HD in mm", fontsize=16)
-    axes[a, b].tick_params(axis='both', which='major', labelsize=14)
-    #axes[a, b].yaxis.set_label_position("right")
-    #axes[a, b].yaxis.tick_right()
-
-    #axes[i,0].annotate(information["models_name"], xy=(0, 0.5), xytext=(-axes[0,0].yaxis.labelpad -5, 0), xycoords=axes[i,0].yaxis.label, textcoords='offset points', fontsize=20, ha='right', va='center', rotation="vertical")
 
 if not path_out:
     plt.show()

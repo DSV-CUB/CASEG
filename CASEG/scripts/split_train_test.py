@@ -1,4 +1,3 @@
-import pydicom
 import os
 import numpy as np
 import shutil
@@ -7,9 +6,9 @@ import shutil
 # PATH TO DATA
 path = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT FULL\EXPERT FULL SAX"
 # OUTPUT PATH WITH THE DATA SPLIT
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT"
+path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX"
 
-# PLEASE CONSIDER THAT THE PATH TO DATA MUST CONTAIN SUBDIRS WITH dcm ws SAX.
+# PLEASE CONSIDER THAT THE PATH TO DATA MUST CONTAIN SUBDIRS WITH AN ENDING OF dcm ws SAX.
 # Each subdir refers to a studyset. For each dicom a corresponding pickle file must exist with the ground truth contours
 # and both need the SOPInstanceUID as name.
 
@@ -39,11 +38,8 @@ for subdir in subdirs:
 
         for i in range(num):
             if i in indeces_test:
-                #os.makedirs(os.path.join(path_out, "Expert Split Test", subsubdirs[i]), exist_ok=True)
                 shutil.copytree(os.path.join(path, subdir, subsubdirs[i]), os.path.join(path_out, "TEST", subsubdirs[i]), dirs_exist_ok=True)
             elif i in indeces_val:
-                #os.makedirs(os.path.join(path_out, "Expert Split Test", subsubdirs[i]), exist_ok=True)
                 shutil.copytree(os.path.join(path, subdir, subsubdirs[i]), os.path.join(path_out, "VALIDATION", subsubdirs[i]), dirs_exist_ok=True)
             else:
-                #os.makedirs(os.path.join(path_out, "Expert Split Train", subsubdirs[i]), exist_ok=True)
                 shutil.copytree(os.path.join(path, subdir, subsubdirs[i]), os.path.join(path_out, "TRAIN", subsubdirs[i]), dirs_exist_ok=True)

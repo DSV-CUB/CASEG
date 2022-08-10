@@ -25,10 +25,10 @@ def subplot_example_case(data, expectations, predictions, indeces, indece_index,
     y_min = np.min(indeces_bb[:,1])
     y_max = np.max(indeces_bb[:,1])
 
-    dx1 = int((x_max-x_min)/2 + x_min) - 30
-    dx2 = int((x_max-x_min)/2 + x_min) + 30
-    dy1 = int((y_max-y_min)/2 + y_min) - 30
-    dy2 = int((y_max-y_min)/2 + y_min) + 30
+    dx1 = int((x_max-x_min)/2 + x_min) - 35
+    dx2 = int((x_max-x_min)/2 + x_min) + 35
+    dy1 = int((y_max-y_min)/2 + y_min) - 35
+    dy2 = int((y_max-y_min)/2 + y_min) + 35
 
     ax.imshow(image[dx1:dx2, dy1:dy2], cmap="gray")
     _, rgba_mask = tools.tool_plot.masks2delta2rgba(predictions[0][indece_index], expectations[0][indece_index], alpha=set_alpha)
@@ -92,7 +92,7 @@ def plot_example_cases(expectations, predictions, expectations_pca, predictions_
     plt.plot([0, 1], [0.5, 0.5], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
 
     subfigs[0].supylabel("native", fontsize=24, fontweight='bold')
-    subfigs[1].supylabel("post contrast agent", fontsize=24, fontweight='bold')
+    subfigs[1].supylabel("contrast enhanced", fontsize=24, fontweight='bold')
 
     axes[0,0].set_title("best DSC case", fontsize=20, fontweight='bold')
     axes[0,1].set_title("worst DSC case", fontsize=20, fontweight='bold')
@@ -150,9 +150,10 @@ def plot_example_cases(expectations, predictions, expectations_pca, predictions_
     return
 
 if __name__ == "__main__":
-    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
-    path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\cases_example_bb.jpg"
+    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+    path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\Figure 2 - Example results of the object detection algorithm showing bounding boxes for the left ventricular myocardium.jpg"
+
     do_tight = False
 
     model_bb = None

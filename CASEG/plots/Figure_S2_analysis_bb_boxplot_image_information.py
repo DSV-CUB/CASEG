@@ -108,6 +108,17 @@ def split_native_pca(data, limit=800):
     data_native = copy.copy(data)
     data_pca = copy.copy(data)
 
+    #print("# MANUAL CHECK THOSE CE CASES ##########################################################")
+    #import pydicom
+    #for path in [x[0] for x in [data.information[i] for i in indeces_pca]]:
+    #    try:
+    #        dcm = pydicom.dcmread(path)
+    #        if not "post" in str(dcm[0x0008, 0x103e].value).lower():
+    #            print(path)
+    #    except:
+    #        pass
+    #print("# END ##########################################################")
+
     data_native.x = [data_native.x[i] for i in indeces_native]
     data_native.x_bb = [data_native.x_bb[i] for i in indeces_native]
     data_native.y = [data_native.y[i] for i in indeces_native]
@@ -128,13 +139,13 @@ def split_native_pca(data, limit=800):
 
 
 if __name__ == "__main__":
-    mode = "true" #"pred"
-    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
+    mode = "pred" # pred or true
 
-    path_data_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TRAIN"
-    path_data_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\VALIDATION"
-    path_data_test = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\bb_ratio_relevant_pixels.jpg"
+    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+    path_data_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TRAIN"
+    path_data_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\VALIDATION"
+    path_data_test = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\S2 - Ratio of relevant pixels.jpg"
 
     model_bb = None
 
@@ -153,25 +164,30 @@ if __name__ == "__main__":
         if not model_bb is None:
             break
 
+
+    data_test = mmsgenerators.unet.Setup(path_data_test, None, "TEST",  model_bb=model_bb, ws_dir=path_data_test, mask_mode="RASTERIZE")
     data_train = mmsgenerators.unet.Setup(path_data_train, None, "TEST",  model_bb=model_bb, ws_dir=path_data_train, mask_mode="RASTERIZE")
     data_val = mmsgenerators.unet.Setup(path_data_val, None, "TEST",  model_bb=model_bb, ws_dir=path_data_val, mask_mode="RASTERIZE")
-    data_test = mmsgenerators.unet.Setup(path_data_test, None, "TEST",  model_bb=model_bb, ws_dir=path_data_test, mask_mode="RASTERIZE")
 
-
+    data_test_native, data_test_pca = split_native_pca(data_test)
     data_train_native, data_train_pca = split_native_pca(data_train)
     data_val_native, data_val_pca = split_native_pca(data_val)
-    data_test_native, data_test_pca = split_native_pca(data_test)
-
-    # INFO PRINT
-    info_train = get_data_info(data_train, mode)
-    info_val = get_data_info(data_val, mode)
-    info_test = get_data_info(data_test, mode)
-
-    print("Train data: original: " + str(np.mean(info_train["relevant_raw"])) + " +/- " + str(np.std(info_train["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_train["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_train["relevant_crop"])) + " +/- " + str(np.std(info_train["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_train["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_train["relevant_raw"], info_train["relevant_crop"])[-1]))
-    print("Validation data: original: " + str(np.mean(info_val["relevant_raw"])) + " +/- " + str(np.std(info_val["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_val["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_val["relevant_crop"])) + " +/- " + str(np.std(info_val["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_val["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_val["relevant_raw"], info_val["relevant_crop"])[-1]))
-    print("Test data: original: " + str(np.mean(info_test["relevant_raw"])) + " +/- " + str(np.std(info_test["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_test["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_test["relevant_crop"])) + " +/- " + str(np.std(info_test["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_test["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_test["relevant_raw"], info_test["relevant_crop"])[-1]))
 
 
+    print("COUNTER - attention numbers might differ as some are not properly sorted")
+    print("TRAIN: #native = " + str(len(data_train_native.x)) + " / #pca = " + str(len(data_train_pca.x)))
+    print("VALIDATION: #native = " + str(len(data_val_native.x)) + " / #pca = " + str(len(data_val_pca.x)))
+    print("TEST: #native = " + str(len(data_test_native.x)) + " / #pca = " + str(len(data_test_pca.x)))
+    print("#########################################################################")
+
+    # ALL IN ONE
+    #info_train = get_data_info(data_train, mode)
+    #info_val = get_data_info(data_val, mode)
+    #info_test = get_data_info(data_test, mode)
+
+    #print("Train data: original: " + str(np.mean(info_train["relevant_raw"])) + " +/- " + str(np.std(info_train["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_train["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_train["relevant_crop"])) + " +/- " + str(np.std(info_train["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_train["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_train["relevant_raw"], info_train["relevant_crop"])[-1]))
+    #print("Validation data: original: " + str(np.mean(info_val["relevant_raw"])) + " +/- " + str(np.std(info_val["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_val["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_val["relevant_crop"])) + " +/- " + str(np.std(info_val["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_val["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_val["relevant_raw"], info_val["relevant_crop"])[-1]))
+    #print("Test data: original: " + str(np.mean(info_test["relevant_raw"])) + " +/- " + str(np.std(info_test["relevant_raw"])) + " shapiro = " + str(stats.shapiro(info_test["relevant_raw"])[-1]) + " / crop: " + str(np.mean(info_test["relevant_crop"])) + " +/- " + str(np.std(info_test["relevant_crop"])) + " shapiro = " + str(stats.shapiro(info_test["relevant_crop"])[-1]) + " / Wilcoxon = " + str(stats.wilcoxon(info_test["relevant_raw"], info_test["relevant_crop"])[-1]))
 
     #rows = 1
     #cols = 1
@@ -195,6 +211,7 @@ if __name__ == "__main__":
 
     #axes.set_xlabel("image")
 
+    #SEPERATED FOR NATIVE AND CE
     cols = 3
     rows = 3.75
 
@@ -215,7 +232,7 @@ if __name__ == "__main__":
     subfigs[0].supylabel("native", fontsize=24, fontweight="bold")
     subsubfigs0[0].supylabel("original image", fontsize=24, fontweight="bold")
     subsubfigs0[1].supylabel("cropped image", fontsize=24, fontweight="bold")
-    subfigs[1].supylabel("post contrast agent", fontsize=24, fontweight="bold")
+    subfigs[1].supylabel("contrast enhanced", fontsize=24, fontweight="bold")
     subsubfigs1[0].supylabel("original image", fontsize=24, fontweight="bold")
     subsubfigs1[1].supylabel("cropped image", fontsize=24, fontweight="bold")
 

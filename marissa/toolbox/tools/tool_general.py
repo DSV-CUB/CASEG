@@ -513,7 +513,7 @@ def adapt_list(lst):
 
 
 def convert_list(text):
-    return text.split("\n")
+    return text.decode().split("\n")
 
 
 def get_window_size():
@@ -987,3 +987,5 @@ def get_python_packages(path):
                             versions.append(version)
     return packages, versions
 
+if __name__ == "__main__":
+    pass

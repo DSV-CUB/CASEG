@@ -6,10 +6,10 @@ import os
 ########################################################################################################################
 
 # for each dicom a pickle file with the ground truth contours must exist. both need the SOPInstanceUID as name
-path_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TRAIN"
-path_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\VALIDATION"
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
-path_bb_weights =r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper\UNET_BB"
+path_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TRAIN"
+path_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\VALIDATION"
+path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_bb_weights = path_out + r"\UNET_BB"
 
 ########################################################################################################################
 ########################################################################################################################
@@ -59,7 +59,8 @@ else:
 model_gen_train = generators.unet.Setup(path_train, None, "TRAINING", model_bb=model_BB, ws_dir=path_train, mask_mode=mask_mode)
 model_gen_val = generators.unet.Setup(path_val, None, "VALIDATION", model_bb=model_BB, ws_dir=path_val, mask_mode=mask_mode)
 
-for model_set in [["refU", 1, False], ["bbU", 2, False], ["cropU", 1, 1.5], ["crinU", 2, 1.5]]:
+
+for model_set in [["crinU", 2, 1.5]]:#[["refU", 1, False], ["cropU", 1, 1.5], ["crinU", 2, 1.5]]:
     config = {"name": "MMS_UNET_" + "".join([character for character in str(model_set) if character.isalnum()]),
               "path_rw": path_out + "\\" + model_set[0],
               "tissue": "MYOCARDIUM",
@@ -80,7 +81,6 @@ for model_set in [["refU", 1, False], ["bbU", 2, False], ["cropU", 1, 1.5], ["cr
               "model_input_size": [256, 256, model_set[1]],
               "model_crop": model_set[2],
               "model_depth": 6,
-              "model_convdepth_max": 512,
               "data_plot": False#path_plot + r"\refU"
               }
 

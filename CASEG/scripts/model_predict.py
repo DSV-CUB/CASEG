@@ -4,10 +4,17 @@ from datetime import datetime
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
 from marissa.toolbox import tools
 
+########################################################################################################################
+# DEFINE PATHS FOR DATA AND OUTPUT #####################################################################################
+########################################################################################################################
 
-path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
+path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
 path_out = r"C:\Users\Omen\Desktop"
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
 
 # load models
 models = []

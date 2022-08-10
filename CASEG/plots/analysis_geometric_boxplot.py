@@ -11,9 +11,9 @@ from marissa.modules.segmentation import models as mmsmodels, generators as mmsg
 from CASEG.plots import metric_boxplot
 
 path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
-
 path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
 path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\geometric_boxplot_DSC_HD.jpg"
+
 
 do_tight = True
 
