@@ -145,7 +145,7 @@ if __name__ == "__main__":
     path_data_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TRAIN"
     path_data_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\VALIDATION"
     path_data_test = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
-    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\S2 - Ratio of relevant pixels.jpg"
+    path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Paper\S3 - Ratio of relevant pixels.jpg"
 
     model_bb = None
 
@@ -236,11 +236,11 @@ if __name__ == "__main__":
     subsubfigs1[0].supylabel("original image", fontsize=24, fontweight="bold")
     subsubfigs1[1].supylabel("cropped image", fontsize=24, fontweight="bold")
 
-    axes[0,0].set_title("train data", fontsize=24, fontweight="bold")
+    axes[0,0].set_title("training data", fontsize=24, fontweight="bold")
     axes[0,1].set_title("validation data", fontsize=24, fontweight="bold")
     axes[0,2].set_title("test data", fontsize=24, fontweight="bold")
 
-    axes[2,0].set_title("train data", fontsize=24, fontweight="bold")
+    axes[2,0].set_title("training data", fontsize=24, fontweight="bold")
     axes[2,1].set_title("validation data", fontsize=24, fontweight="bold")
     axes[2,2].set_title("test data", fontsize=24, fontweight="bold")
 

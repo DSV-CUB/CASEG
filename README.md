@@ -29,7 +29,7 @@ saendocardialContour = list{numpy.array[Nendo,2], shape_of_original_image_x, sha
 where Nepi and Nendo denotes the numberof points in order to define the epi- and endocardial contour respectively.
 
 For training and testing, the dicom image and the corresponding pickle file with the ground truth segmentation must be
-stored in the same directory and match names. We recommend both having the SOPInstanceUID as filename.
+stored in the same directory and match names. We recommend both having the SOPInstanceUID as filename, for the pickle file it is mandatory.
 
 ## Scripts
 The used scripts for training and testing are provided in CASEG\scripts.

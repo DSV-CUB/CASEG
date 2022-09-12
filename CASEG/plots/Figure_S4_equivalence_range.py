@@ -3,74 +3,74 @@ import pickle
 import copy
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from scipy import stats
+from scipy import special
 
 from marissa.toolbox import tools
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
 
-def plot(data, axes=None, equivalence_limit=None):
+def plot(data, axes=None, equivalence_margin=24.5, **kwargs):
+    # data preparation
+    alpha = kwargs.get("alpha", 0.05)
+    bc = kwargs.get("bc", True) # bonferroni correction
+
+    data_plot = []
+    for i in range(len(data["models_name"])):
+        data_model = []
+        for j in range(len(data["expectations"][i])):
+            data_model.append(tools.tool_general.get_metric_from_masks(data["predictions"][i][j], data["expectations"][i][j], "E", values=data["data"][j]))
+        data_plot.append(data_model)
+
+    if bc:
+        alpha_c = alpha / len(data_plot)# bonferoni corrected alpha
+    else:
+        alpha_c = copy.copy(alpha)
+
+
     # create figure if no axes given
     if axes is None:
         cols = int(len(data["models_name"]))
         rows = 1
         fig, axes = plt.subplots(rows, cols, gridspec_kw={'width_ratios': [1] * cols})
 
-    lim_min_x = np.floor(np.min(np.mean(np.array([np.array(data["predictions_values"]), np.array(data["expectations_values"])]), axis=0))/100) * 100
-    lim_max_x = np.ceil(np.max(np.mean(np.array([np.array(data["predictions_values"]), np.array(data["expectations_values"])]), axis=0))/100) * 100
-
-    lim_min_y = np.floor(np.min((np.array([np.array(data["predictions_values"]) - np.array(data["expectations_values"])])))/10) * 10
-    lim_max_y = np.ceil(np.max((np.array([np.array(data["predictions_values"]) - np.array(data["expectations_values"])])))/10) * 10
-
+    # do plots
     for i in range(len(data["models_name"])):
-        x = np.mean(np.array([np.array(data["predictions_values"][i]).flatten(), np.array(data["expectations_values"][i]).flatten()]), axis=0)
-        y = np.array([np.array(data["predictions_values"][i]).flatten() - np.array(data["expectations_values"][i]).flatten()]).flatten()
+        data_mean = np.mean(data_plot[i])
+        data_std = np.std(data_plot[i])
+        CI = (1 - alpha_c)
+        factor_std = np.sqrt(2) * special.erfinv(CI)
 
-        if equivalence_limit is None:
-            axes[i].scatter(x, y, 2, zorder=10, c="C0")
-        else:
-            indeces = np.argwhere(np.abs(y)<=equivalence_limit).flatten()
-            axes[i].scatter(x[indeces],y[indeces],2, c="C0", zorder=10)
-            indeces = np.argwhere(np.abs(y)>equivalence_limit).flatten()
-            axes[i].scatter(x[indeces],y[indeces],2,c="r", zorder=10)
+        limits = np.sort(np.array([data_mean - factor_std * data_std / np.sqrt(len(data_plot[i])), data_mean + factor_std * data_std / np.sqrt(len(data_plot[i]))]))
+        print(limits)
+        plt.plot()
+
+        axes[i].axhline(equivalence_margin, c="C1", lw=1, linestyle=":")
+        axes[i].axhline(-equivalence_margin, c="C1", lw=1, linestyle=":")
+        axes[i].axhline(0, c="C1", lw=1, linestyle="-")
+        axes[i].fill_between(np.array([0.75, 1.25]), [equivalence_margin, equivalence_margin], [-equivalence_margin, -equivalence_margin], color="#fff1c780")
+        axes[i].plot([1, 1], limits, zorder=10, c="C0")
+        axes[i].scatter([1, 1], limits, zorder=10, c="C0", marker="s")
+
+        axes[i].set_xlim(1.5*equivalence_margin, -1.5*equivalence_margin)
+        axes[i].set_xlim(0.75, 1.25)
+        axes[i].set_xticks([0.75, 1, 1.25])
+        axes[i].set_xticklabels(["", "", ""])
+        plt.setp(axes[i].get_xticklabels())
 
 
-        axes[i].barh(np.mean(y), lim_max_x-lim_min_x, 2 * 1.96 * np.std(y), lim_min_x, color="#bcbd2240")
-        axes[i].axhline(np.mean(y), color='C8', linestyle='-')
-        axes[i].axhline(np.mean(y) + 1.96 * np.std(y), color='C8', linestyle='--')
-        axes[i].axhline(np.mean(y) - 1.96 * np.std(y), color='C8', linestyle='--')
 
-        axes[i].set_xlim(lim_min_x, lim_max_x)
-        axes[i].set_ylim(lim_min_y, lim_max_y)
-        axes[i].set_xlabel("Mean of prediction and expectation", fontsize=14)
-        axes[i].set_ylabel("prediction - expectation", fontsize=14)
-        axes[i].tick_params(axis='both', which='major', labelsize=14)
-        axes[i].xaxis.set_minor_locator(MultipleLocator(100))
-        axes[i].yaxis.set_minor_locator(MultipleLocator(10))
-        axes[i].grid(True, axis="both", which="both", ls=":")
-
-        xvals,yvals = axes[i].axes.get_xlim(),axes[i].axes.get_ylim()
-        xrange = xvals[1]-xvals[0]
-        yrange = yvals[1]-yvals[0]
-        axes[i].set_aspect(1*(xrange/yrange), adjustable='box')
-
-        if axes is None:
-            axes[i].title.set_text(information["models_name"][i])
-        #axes[i].set(adjustable='box', aspect='equal')
-
+    # show figure if no axes given
     if axes is None:
-        #plt.tight_layout()
+        plt.tight_layout()
         plt.show()
 
     return
+
 
 if __name__ == "__main__":
     path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
     path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
     path_information = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\STATISTICS\models_SAXpaper_data_TEST_SAX.pickle"
     load = False
-
-
 
     if load:
         models = []
@@ -131,3 +131,11 @@ if __name__ == "__main__":
 
 
     information["models_name"] = [name[11:].replace("_1.5", "") for name in information["models_name"]]
+
+
+
+
+
+
+
+

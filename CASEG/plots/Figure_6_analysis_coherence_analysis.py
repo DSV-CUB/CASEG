@@ -130,11 +130,11 @@ plt.plot([0, 1], [0.5, 0.5], color='black', lw=1, transform=plt.gcf().transFigur
 
 
 
-t1_omDSC_plot.plot(information_native, axes[0,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
-t1_disjoint_histogram.plot(information_native, axes[1,:].flatten(), bounds=[500, 2000])
+t1_omDSC_plot.plot(information_native, axes[1,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
+t1_disjoint_histogram.plot(information_native, axes[0,:].flatten(), bounds=[500, 2000])
 
-t1_omDSC_plot.plot(information_pca, axes[2,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
-t1_disjoint_histogram.plot(information_pca, axes[3,:].flatten(), bounds=[250, 650])
+t1_omDSC_plot.plot(information_pca, axes[3,:].flatten(), equivalence_limit=equivalence_margin, abs=True)
+t1_disjoint_histogram.plot(information_pca, axes[2,:].flatten(), bounds=[250, 650])
 
 
 if not path_out:
