@@ -7,10 +7,16 @@ In order to use the scripts, please make sure:
 
 ## Installation
 - Download and install Python 3.8 from https://www.python.org/downloads/
-- install rasterio (instructions work for Windows 10):
-    - download and install GDAL from https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows
-    - add system environment variables as described in the link
-    - download and install rasterior wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/
+- install rasterio (instructions work for Windows 10 and is adapted from the instructions at https://sandbox.idre.ucla.edu/sandbox/tutorials/installing-gdal-for-windows):
+    - go to http://www.gisinternals.com/release.php and click on release-1928-x64-gdal-3-4-1-mapserver-8-0-0
+        - download and install gdal-304-1928-x64-core.msi
+        - download and install GDAL-3.4.1.win-amd64-py3.8.msi
+    - add system environment variables in Windows
+        - in the PATH variable add the path to the GDAL installation folder (i.e. C:\Program Files\GDAL)
+        - add a GDAL_DATA variable (i.e. pointing to C:\Program Files\GDAL\gdal-data)
+        - add a GDAL_DRIVER_PATH variable (i.e. pointing to C:\Program Files\GDAL\gdalplugins)
+    - check GDAL installation by opening a command prompt and type in gdalinfo --version
+    - download and install rasterio-1.2.10-cp38-cp38-win_amd64.whl from https://www.lfd.uci.edu/~gohlke/pythonlibs/
     - download and install VC redist from https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
     - restart the PC
 - pip install the requirements.txt
@@ -34,3 +40,4 @@ stored in the same directory and match names. We recommend both having the SOPIn
 ## Scripts
 The used scripts for training and testing are provided in CASEG\scripts.
 The marissa dict is from another project but contains necessary code files that are used here.
+For usage, the scripts must be adapted in the paths pointing to the data.
