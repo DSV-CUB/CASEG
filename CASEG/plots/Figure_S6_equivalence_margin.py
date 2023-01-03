@@ -8,16 +8,13 @@ from matplotlib.ticker import MultipleLocator
 
 from marissa.toolbox import tools
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
-from CASEG.plots import t1_disjoint_histogram
+from CASEG.plots import t1_equivalence
 
-path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
+path_weights = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_data = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+path_out = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\Revision\S4 - Equivalence Range.jpg"
 
-path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\PLOTS\MV Data\quantitative_disjoint_histogram.jpg"
-
-equivalence_margin=24.5
-do_tight = True
-do_abs = True
+equivalence_limits=24.5
 
 models = []
 models_names = []
@@ -107,6 +104,7 @@ information_native = {"models_name": models_names,
 
 
 
+
 # RUN PLOT
 # all together
 #cols = int(len(information["models_name"]))
@@ -117,7 +115,7 @@ information_native = {"models_name": models_names,
 #    axes = np.array([axes])
 
 #for i in range(1):
-#    t1_disjoint_histogram.plot(information, axes[i,:].flatten())
+#    t1_equivalence.plot(information, axes[i,:].flatten(), limits=equivalence_limits)
 
 #for i in range(len(information["models_name"])):
 #    axes[0,i].set_title(information["models_name"][i], fontdict=dict(fontsize=20), pad=20)
@@ -127,23 +125,35 @@ information_native = {"models_name": models_names,
 #plt.show()
 
 # separate
-cols = int(len(information["models_name"]))
-rows = 2
-fig, axes = plt.subplots(rows, cols, gridspec_kw={'width_ratios': [1] * cols}, figsize=(cols*5, rows*5))
+cols = 3
+rows = 1.75
 
-t1_disjoint_histogram.plot(information_native, axes[0,:].flatten())
-t1_disjoint_histogram.plot(information_pca, axes[1,:].flatten())
+fig = plt.figure(None, figsize=(cols*5, rows*5), constrained_layout=True, dpi=300)
+subfigs = fig.subfigures(2, 1)#, width_ratios = [0.05, 1, 1, 0.05], height_ratios = [1, 1, 1])
 
-axes[0,0].annotate("native", xy=(0, 0.5), xytext=(-axes[0,0].yaxis.labelpad -5, 0), xycoords=axes[0,0].yaxis.label, textcoords='offset points', fontsize=20, ha='right', va='center', rotation="vertical")
-axes[1,0].annotate("pca", xy=(0, 0.5), xytext=(-axes[1,0].yaxis.labelpad -5, 0), xycoords=axes[1,0].yaxis.label, textcoords='offset points', fontsize=20, ha='right', va='center', rotation="vertical")
 
-for i in range(len(information["models_name"])):
-    axes[0,i].set_title(information["models_name"][i], fontdict=dict(fontsize=20), pad=20)
+axes_sf0 = subfigs[0].subplots(1,3, gridspec_kw={'width_ratios': [1] * 3, 'height_ratios': [1] * 1})
+axes_sf1 = subfigs[1].subplots(1,3, gridspec_kw={'width_ratios': [1] * 3, 'height_ratios': [1] * 1})
+axes = np.vstack((axes_sf0, axes_sf1))
 
-if do_tight:
-    plt.tight_layout()
+
+subfigs[0].supylabel("native", fontsize=24, fontweight="bold")
+subfigs[1].supylabel("contrast enhanced", fontsize=24, fontweight="bold")
+axes[0,0].set_title("refU", fontsize=24, fontweight="bold")
+axes[0,1].set_title("cropU", fontsize=24, fontweight="bold")
+axes[0,2].set_title("crinU", fontsize=24, fontweight="bold")
+axes[1,0].set_title("refU", fontsize=24, fontweight="bold")
+axes[1,1].set_title("cropU", fontsize=24, fontweight="bold")
+axes[1,2].set_title("crinU", fontsize=24, fontweight="bold")
+plt.plot([0, 1], [0.5, 0.5], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
+
+
+
+t1_equivalence.plot(information_native, axes[0,:].flatten(), equivalence_margin=equivalence_limits)
+t1_equivalence.plot(information_pca, axes[1,:].flatten(), equivalence_margin=equivalence_limits)
+
+
 if not path_out:
     plt.show()
 else:
-    plt.gcf().set_dpi(300)
     plt.savefig(path_out)

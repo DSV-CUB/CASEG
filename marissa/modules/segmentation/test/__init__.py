@@ -500,3 +500,111 @@ def test_performance_export(predictions, expectations, names, data_copy, path_ou
     excel.save()
 
     return
+
+
+def test_on_array(array, reference_ID=0):
+
+    stattests = []
+    for i in range(np.shape(array)[1]): # model
+        stattests_model =[]
+        try:
+            stattests_model.append(round(stats.shapiro(array[:, i].flatten())[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            stattests_model.append(round(stats.shapiro(np.log(np.array(array[:, i].flatten() + 1e-100)))[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            statdata = []
+            for ii in range(np.shape(array)[1]):
+                statdata.append(np.array(array[:, ii].flatten()))
+            stattests_model.append(round(stats.friedmanchisquare(*statdata)[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            statdata = []
+            for ii in range(np.shape(array)[1]):
+                col_metrics = np.array(array[:, ii].flatten())
+                col_patient = np.arange(0, len(col_metrics))
+                col_model = np.ones(np.shape(col_metrics)) * ii
+                stack = np.stack((col_patient, col_model, col_metrics))
+
+                if len(statdata) == 0:
+                    statdata = stack
+                else:
+                    statdata = np.hstack((statdata, stack))
+
+                #input.append(np.array(data[metrics[j], model_descriptions[l]].tolist()))
+            #statistic = stats.f_oneway(*input)
+            #pval = round(statistic[-1], 4)
+
+
+            df = pd.DataFrame((statdata.T), columns=["patient", "model", "metric_value"])
+            arm = AnovaRM(df, "metric_value", "patient", ["model"])
+            armresult = arm.fit()
+            stattests_model.append(round(armresult.anova_table["Pr > F"][0], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            statdata = []
+            for ii in range(np.shape(array)[1]):
+                col_metrics = np.log(np.array(array[:, ii].flatten() + 1e-100))
+                col_patient = np.arange(0, len(col_metrics))
+                col_model = np.ones(np.shape(col_metrics)) * ii
+                stack = np.stack((col_patient, col_model, col_metrics))
+
+                if len(statdata) == 0:
+                    statdata = stack
+                else:
+                    statdata = np.hstack((statdata, stack))
+
+                #input.append(np.array(data[metrics[j], model_descriptions[l]].tolist()))
+            #statistic = stats.f_oneway(*input)
+            #pval = round(statistic[-1], 4)
+
+
+            df = pd.DataFrame((statdata.T), columns=["patient", "model", "metric_value"])
+            arm = AnovaRM(df, "metric_value", "patient", ["model"])
+            armresult = arm.fit()
+            stattests_model.append(round(armresult.anova_table["Pr > F"][0], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            stattests_model.append(round(stats.wilcoxon(array[:, reference_ID].flatten(), array[:, i].flatten(), alternative="two-sided")[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            stattests_model.append(round(stats.ttest_rel(array[:, reference_ID].flatten(), array[:, i].flatten(), nan_policy="omit")[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        try:
+            stattests_model.append(round(stats.ttest_rel(array[:, reference_ID].flatten(), array[:, i].flatten(), nan_policy="omit")[-1], 4))
+        except:
+            stattests_model.append(float("nan"))
+
+        stattests.append(stattests_model)
+
+    stattests = np.transpose(np.array(stattests))
+    global_tests = ["shapiro", "shapiro log", "Friedman", "Annova RM", "Annova RM log", "Wilcoxon ref: " + str(reference_ID+1), "t test ref: " + str(reference_ID+1), "t test log ref: " + str(reference_ID+1)]
+
+    values = []
+    values.append(np.mean(array, axis=0))
+    values.append(np.std(array, axis=0))
+    values.append(np.median(array, axis=0))
+    values.append(np.quantile(array, 0.25, axis=0))
+    values.append(np.quantile(array, 0.75, axis=0))
+    values.append(np.min(array, axis = 0))
+    values.append(np.max(array, axis=0))
+    values = np.array(values)
+
+    global_statistics = ["average", "std", "median", "quantile25", "quantile75", "min", "max"]
+
+    return np.vstack((np.squeeze(values), np.squeeze(stattests))), global_statistics+global_tests

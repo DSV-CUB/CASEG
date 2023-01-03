@@ -80,8 +80,14 @@ class Setup:
                         pass
                     else:
                         continue
+                elif self.configuration.measure.upper() == "CINE":
+                    if not ((("MOCO" in obj_dcm[0x0008, 0x0008].value or "T1 MAP" in obj_dcm[0x0008, 0x0008].value) and "T1" in obj_dcm[0x0008, 0x0008].value) or ("MOCO" in obj_dcm[0x0008, 0x0008].value and "T2" in obj_dcm[0x0008, 0x0008].value)):
+                        pass
+                    else:
+                        continue
+
                 else:
-                    raise ValueError("Quantification Type unknown. Use one of the following types: None, T1MAP, T2MAP, T1T2MAP")
+                    raise ValueError("Quantification Type unknown. Use one of the following types: None, T1MAP, T2MAP, T1T2MAP, CINE")
 
                 if self.configuration.filter == "RELEVANT":
                     obj_dcm_tag = copy.deepcopy(tag_dict)

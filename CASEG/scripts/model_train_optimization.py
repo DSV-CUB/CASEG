@@ -7,6 +7,7 @@ import os
 paths = [r"", r""]
 # just needed if training was interrupted, please consider that the last one might not be finished so set jump_over to the number of done training minus 1
 jump_over = 0
+magnification_factor = 1.5
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -63,7 +64,7 @@ for opt in ["adam", "rmsprop", "sgd"]:
         for loss in ["bce", "log_cosh_dice", "focal_tversky"]:
             for lr_method in ["rop", "linear", "constant", "triangle", "exponential"]:
                 for lr in [1e-2, 1e-3]:
-                    for model_set in [["refU", 1, False], ["cropU", 1, 1.5], ["crinU", 2, 1.5]]:
+                    for model_set in [["refU", 1, False], ["cropU", 1, magnification_factor], ["crinU", 2, magnification_factor]]:
                         config = {"name": "MMS_UNET_" + model_set[0],
                                   "path_rw": path_out + "\\" + "".join([character for character in str(model_set) if character.isalnum()]) + "_" + opt + "_" + loss + "_" + lr_method + "_" + str(int(1000 * lr)) + "e-3",
                                   "tissue": "MYOCARDIUM",

@@ -1,1 +1,1 @@
-from marissa.modules.segmentation.generators import unet
+from marissa.modules.segmentation.generators import unet, unet_geoquant

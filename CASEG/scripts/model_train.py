@@ -6,9 +6,9 @@ import os
 ########################################################################################################################
 
 # for each dicom a pickle file with the ground truth contours must exist. both need the SOPInstanceUID as name
-path_train = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TRAIN"
-path_val = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\VALIDATION"
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_train = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TRAIN"
+path_val = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\VALIDATION"
+path_out = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\revision_UNET6_SAX_BB"
 path_bb_weights = path_out + r"\UNET_BB"
 
 ########################################################################################################################
@@ -19,6 +19,7 @@ path_bb_weights = path_out + r"\UNET_BB"
 
 path_plot = path_out + r"\plot"
 mask_mode = "RASTERIZE"
+magnification_factor = 1.5
 
 # Model BB
 config_BB = {"name": "MMS_UNET_BB",
@@ -60,7 +61,7 @@ model_gen_train = generators.unet.Setup(path_train, None, "TRAINING", model_bb=m
 model_gen_val = generators.unet.Setup(path_val, None, "VALIDATION", model_bb=model_BB, ws_dir=path_val, mask_mode=mask_mode)
 
 
-for model_set in [["crinU", 2, 1.5]]:#[["refU", 1, False], ["cropU", 1, 1.5], ["crinU", 2, 1.5]]:
+for model_set in [["refU", 1, False], ["cropU", 1, magnification_factor], ["crinU", 2, magnification_factor]]:
     config = {"name": "MMS_UNET_" + "".join([character for character in str(model_set) if character.isalnum()]),
               "path_rw": path_out + "\\" + model_set[0],
               "tissue": "MYOCARDIUM",

@@ -1,1 +1,1 @@
-from marissa.modules.segmentation.models import unet, qcd
+from marissa.modules.segmentation.models import unet, qcd, unet_geoquant

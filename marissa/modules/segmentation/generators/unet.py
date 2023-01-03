@@ -26,6 +26,7 @@ class Setup(creator_generator.Inheritance):
 
         model_bb = kwargs.get("model_bb", None)
         ws_dir = kwargs.get("ws_dir", False)
+        ws_type = kwargs.get("ws_type", "SAX")
         self.mask_mode = kwargs.get("mask_mode", "RASTERIZE")
 
         self.x = []
@@ -131,13 +132,27 @@ class Setup(creator_generator.Inheritance):
                             #in_0 = tool_general.array_resolution(in_0, spr)
                             contours = []
 
-                            if "saendocardialContour" in ws:
-                                contours.append(spr * ws["saendocardialContour"][0][:, [1,0]])
+                            if ws_type == "SAX":
+                                if "saendocardialContour" in ws:
+                                    contours.append(spr * ws["saendocardialContour"][0][:, [1,0]])
 
-                            if "saepicardialContour" in ws:
-                                contours.append(spr * ws["saepicardialContour"][0][:, [1,0]])
+                                if "saepicardialContour" in ws:
+                                    contours.append(spr * ws["saepicardialContour"][0][:, [1,0]])
+                            elif ws_type == "LAX":
+                                if "laendocardialContour" in ws:
+                                    contours.append(spr * ws["saendocardialContour"][0][:, [1,0]])
 
-                            if not "saendocardialContour" in ws and not "saepicardialContour" in ws:
+                                if "laepicardialContour" in ws:
+                                    contours.append(spr * ws["saepicardialContour"][0][:, [1,0]])
+                            elif type(ws_type)==list:
+                                for c in ws_type:
+                                    if c in ws:
+                                        contours.append(spr * ws[c][0][:, [1,0]])
+                            else:
+                                if ws_type in ws:
+                                    contours.append(spr * ws[ws_type][0][:, [1,0]])
+
+                            if contours == []: # not "saendocardialContour" in ws and not "saepicardialContour" in ws:
                                 for key in ws:
                                     if "contour" in key.lower():
                                         contours.append(spr * ws[key][0][:, [1,0]])
@@ -435,16 +450,38 @@ class Setup(creator_generator.Inheritance):
                     gen_y[i] = np.apply_along_axis(lambda lmbd: lmbd * np.array([self.configuration.model_settings.model_input_size[0], self.configuration.model_settings.model_input_size[1]] / np.array(np.shape(gen_x))), 1, gen_y[i])
 
                 try:
-                    edges = np.array(np.vstack((gen_y[0], gen_y[1]))).astype("float32")
+                    if len(gen_y) == 2:
+                        edges = np.array(np.vstack((gen_y[0], gen_y[1]))).astype("float32")
+                    else:
+                        edges = np.array(gen_y[0]).astype("float32")
+
                     index_x_min = int(np.min(edges[:,0])) #+ np.random.randint(0, 10) - 5
                     index_x_max = int(np.max(edges[:,0])) #+ np.random.randint(0, 10) - 5
                     index_y_min = int(np.min(edges[:,1])) #+ np.random.randint(0, 10) - 5
                     index_y_max = int(np.max(edges[:,1])) #+ np.random.randint(0, 10) - 5
 
+                    if self.configuration.model_settings.model_crop and self.configuration.model_settings.model_crop > 1:
+                        xadd = int(np.round((self.configuration.model_settings.model_crop - 1) * (index_x_max - index_x_min) / 2, 0))
+                        yadd = int(np.round((self.configuration.model_settings.model_crop - 1) * (index_y_max - index_y_min) / 2, 0))
+
+                        index_x_min = index_x_min - xadd
+                        index_x_max = index_x_max + xadd
+                        index_y_min = index_y_min - yadd
+                        index_y_max = index_y_max + yadd
+
+                        if index_x_min < 0:
+                            index_x_min = 0
+                        if index_x_max > np.shape(x)[0]-1:
+                            index_x_max = np.shape(x)[0]-1
+                        if index_y_min < 0:
+                            index_y_min = 0
+                        if index_y_max > np.shape(x)[1]-1:
+                            index_y_max = np.shape(x)[1]-1
+
                     y = np.zeros(np.shape(x))
                     y[index_x_min:index_x_max, index_y_min:index_y_max] = 1
                 except:
-                    y = np.zeros(np.shape(y))
+                    y = np.zeros(np.shape(x))
             else:
                 raise ValueError("configuration.model_settings.model.predictor is \"" + str(self.configuration.model_settings.model_predictor) + "\" but only \"SEGM\" and \"BB\" are allowed.")
 

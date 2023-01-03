@@ -3,20 +3,28 @@ import pickle
 import copy
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from scipy import stats
 from scipy import special
 
 from marissa.toolbox import tools
 from marissa.modules.segmentation import models as mmsmodels, generators as mmsgenerators
 
-def plot(data, axes=None, **kwargs):
-
-    tolerance = kwargs.get("tolerance", 0.95)
+def plot(data, axes=None, equivalence_margin=24.5, **kwargs):
+    # data preparation
     alpha = kwargs.get("alpha", 0.05)
-    bonferoni = kwargs.get("bonferoni", True)
-    nobias = kwargs.get("nobias", True)
-    limits = kwargs.get("limits", None)
+    bc = kwargs.get("bc", True) # bonferroni correction
+
+    data_plot = []
+    for i in range(len(data["models_name"])):
+        data_model = []
+        for j in range(len(data["expectations"][i])):
+            data_model.append(tools.tool_general.get_metric_from_masks(data["predictions"][i][j], data["expectations"][i][j], "E", values=data["data"][j]))
+        data_plot.append(data_model)
+
+    if bc:
+        alpha_c = alpha / len(data_plot)# bonferoni corrected alpha
+    else:
+        alpha_c = copy.copy(alpha)
+
 
     # create figure if no axes given
     if axes is None:
@@ -24,69 +32,114 @@ def plot(data, axes=None, **kwargs):
         rows = 1
         fig, axes = plt.subplots(rows, cols, gridspec_kw={'width_ratios': [1] * cols})
 
-    if limits is None:
-        reference_std_factor = np.sqrt(2) * special.erfinv(tolerance)
-        reference_mean = np.mean(data["equivalence"])
-        reference_std = np.std(data["equivalence"]) * reference_std_factor
-    else:
-        reference_mean = 0
-        reference_std = limits
-
-    if bonferoni:
-        alpha_c = alpha / len(data)# bonferoni corrected alpha
-    else:
-        alpha_c = copy.copy(alpha)
-
-    CI = (1 - 2*alpha_c)
-    test_std_factor = np.sqrt(2) * special.erfinv(CI)
-
-    max_value = reference_std
+    # do plots
     for i in range(len(data["models_name"])):
-        diff = np.array(data["predictions_values"][i]).flatten() - np.array(data["expectations_values"][i]).flatten()
-        test_mean = (np.mean(diff) - reference_mean)
-        test_std = (test_std_factor * np.std(diff))
-        max_value = int(np.max(np.array([max_value, abs(test_mean+test_std), abs(test_mean-test_std)])))
-    max_value = (np.ceil(max_value/10)+1)*10
+        data_mean = np.mean(data_plot[i])
+        data_std = np.std(data_plot[i])
+        CI = (1 - alpha_c)
+        factor_std = np.sqrt(2) * special.erfinv(CI)
 
-    for i in range(len(data["models_name"])):
-        diff = np.array(data["predictions_values"][i]).flatten() - np.array(data["expectations_values"][i]).flatten()
-        test_mean = (np.mean(diff) - reference_mean)
-        test_std = (test_std_factor * np.std(diff))
+        limits = np.sort(np.array([data_mean - factor_std * data_std / np.sqrt(len(data_plot[i])), data_mean + factor_std * data_std / np.sqrt(len(data_plot[i]))]))
+        print("\n#########################################################\n")
+        print(limits)
+        print("\n#########################################################\n")
+        plt.plot()
 
-        axes[i].barh(-reference_std, 2, 2*reference_std, align="edge", color="#fff1c780")
-        axes[i].axhline(0, 0, 2, color="C1", linestyle=":")
-        axes[i].axhline(reference_std, 0, 2, color="C1", linestyle="--")
-        axes[i].axhline(-reference_std, 0, 2, color="C1", linestyle="--")
+        axes[i].axhline(equivalence_margin, c="C1", lw=1, linestyle=":")
+        axes[i].axhline(-equivalence_margin, c="C1", lw=1, linestyle=":")
+        axes[i].axhline(0, c="C1", lw=1, linestyle="-")
+        axes[i].fill_between(np.array([0.75, 1.25]), [equivalence_margin, equivalence_margin], [-equivalence_margin, -equivalence_margin], color="#fff1c780")
+        axes[i].plot([1, 1], limits, zorder=10, c="C0")
+        axes[i].scatter([1, 1], limits, zorder=10, c="C0", marker="s")
 
-        if nobias:
-            axes[i].errorbar(1, 0, yerr=test_std, capsize=2, color="C0", zorder=10)
-            axes[i].scatter(1, 0, color="C0", zorder=10)
-        else:
-            axes[i].errorbar(1, test_mean, yerr=test_std, capsize=2, color="C0", zorder=10)
-            axes[i].scatter(1, test_mean, color="C0", zorder=10)
-
-        print(data["models_name"][i] + " bias corrected residuals: +/-" + str(test_std))
-
-        axes[i].set_xlim(0, 2)
-        axes[i].set_xticks([0, 1, 2])
-
-        axes[i].set_ylim(-max_value, max_value)
-        xvals,yvals = axes[i].axes.get_xlim(),axes[i].axes.get_ylim()
-        xrange = xvals[1]-xvals[0]
-        yrange = yvals[1]-yvals[0]
-        axes[i].set_aspect(1*(xrange/yrange), adjustable='box')
-        #axes[i].set_xticklabels(["", data["models_name"][i], ""])
+        axes[i].set_xlim(1.5*equivalence_margin, -1.5*equivalence_margin)
+        axes[i].set_xlim(0.75, 1.25)
+        axes[i].set_xticks([0.75, 1, 1.25])
         axes[i].set_xticklabels(["", "", ""])
-        axes[i].yaxis.set_minor_locator(MultipleLocator(10))
-        axes[i].grid(True, axis="y", which="both", ls=":")
-        #axes[i].setp(axes[i].get_xticklabels(), rotation=90, fontsize='x-small')
+        plt.setp(axes[i].get_xticklabels())
 
-        #if i == 0:
-        axes[i].set_ylabel("error in ms", fontsize=14)
-        axes[i].tick_params(axis='both', which='major', labelsize=14)
 
+
+    # show figure if no axes given
     if axes is None:
         plt.tight_layout()
         plt.show()
 
     return
+
+
+if __name__ == "__main__":
+    path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX - Paper"
+    path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX_SPLIT\TEST_MV"
+    path_information = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\STATISTICS\models_SAXpaper_data_TEST_SAX.pickle"
+
+
+    load = False
+
+    if load:
+        models = []
+        models_names = []
+        model_bb = None
+
+        for root, _, files in os.walk(path_weights):
+            for file in files:
+                if file.endswith(".pickle"):
+                    model = mmsmodels.unet.Setup()
+                    try:
+                        model.load(os.path.join(root, file))
+                    except:
+                        continue
+
+                    if model.configuration.model_settings.model_predictor.upper() == "BB" or model.configuration.model_settings.model_predictor.upper() == "BOUNDINGBOX":
+                        model_bb = copy.copy(model)
+                    else:
+                        models.append(copy.copy(model))
+                        models_names.append(copy.copy(model.configuration.name))
+
+        data = mmsgenerators.unet.Setup(path_data, None, "TEST",  model_bb=model_bb, ws_dir=path_data, mask_mode="RASTERIZE")
+
+        predictions = []
+        expectations = []
+        predictions_values = []
+        expectations_values = []
+        for i in range(len(models)):
+            data.configuration.set(**models[i].configuration.__dict__)
+            prediction, expectation = models[i].predict_generator(data)
+            predictions.append(copy.copy(prediction))
+            expectations.append(copy.copy(expectation))
+
+            prediction_value = []
+            expectation_value = []
+            for j in range(len(data.x)):
+                prediction_value.append(np.mean(data.x[j][np.where(prediction[j])]))
+                expectation_value.append(np.mean(data.x[j][np.where(expectation[j])]))
+            predictions_values.append(copy.copy(prediction_value))
+            expectations_values.append(copy.copy(expectation_value))
+
+
+
+        information = {"models_name": models_names,
+                       "data": data.x,
+                       "predictions": predictions,
+                       "expectations": expectations,
+                       "predictions_values": predictions_values,
+                       "expectations_values": expectations_values}
+
+        with open(path_information, "wb") as f:
+            pickle.dump(information, f)
+            f.close()
+    else:
+        with open(path_information, "rb") as f:
+            information = pickle.load(f)
+            f.close()
+
+
+    information["models_name"] = [name[11:].replace("_1.5", "") for name in information["models_name"]]
+
+
+
+
+
+
+
+

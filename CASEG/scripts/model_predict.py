@@ -8,9 +8,9 @@ from marissa.toolbox import tools
 # DEFINE PATHS FOR DATA AND OUTPUT #####################################################################################
 ########################################################################################################################
 
-path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
-path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
-path_out = r"C:\Users\Omen\Desktop"
+path_data = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+path_weights = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_out = r"C:\Users\CMRT\Desktop"
 
 ########################################################################################################################
 ########################################################################################################################

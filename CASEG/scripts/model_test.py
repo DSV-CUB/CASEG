@@ -13,9 +13,9 @@ do_test = False # TEST THE MODELS IN GENERAL
 do_test_native_pca = True # TEST THE MODELS BUT SEPARATED FOR NATIVE AND PCA
 
 # DEFINE PATHS
-path_weights = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper_CASEG_ONLY"
-path_data = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
-path_out = r"D:\ECRC_AG_CMR\3 - Promotion\Project CASEG\6 - Analysis\RESULTS\Paper"
+path_data = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\3 - Measurements\FULL DATASETS\EXPERT SPLIT\EXPERT FULL SAX\TEST_BASMV"
+path_weights = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\WEIGHTS\UNET6_SAX_Paper"
+path_out = r"C:\Users\CMRT\Documents\DSV\3 - Promotion\Project CASEG\6 - Analysis\RESULTS\Revision\revision_UNET6_magnificationfactortest"
 
 ########################################################################################################################
 ########################################################################################################################

@@ -149,6 +149,34 @@ def loss_focal_tversky(y_true, y_pred, alpha=0.3, beta=0.7, gamma=0.75):
     ltv = loss_tversky(y_true, y_pred, alpha, beta)
     return tf.math.pow(ltv, gamma)
 
+def loss_geoquant(y_true, y_pred, quantclip=10):
+    y_true_cast = tf.cast(y_true, tf.float32)
+    y_pred_cast = tf.cast(y_pred, tf.float32)
+
+    # Geometric Loss
+    num = 2 * tf.reduce_sum(y_true_cast[:,:,:,1] * y_pred_cast[:,:,:,1]) + 1
+    denom = tf.reduce_sum(y_true_cast[:,:,:,1] + y_pred_cast[:,:,:,1]) + 1
+    loss_geo = 1 - num / denom
+
+    # Quantitative Loss
+    val_true = tf.reduce_sum(y_true_cast[:,:,:,1] * y_pred_cast[:,:,:,0])
+    val_pred = tf.reduce_sum(y_pred_cast[:,:,:,1] * y_pred_cast[:,:,:,0])
+
+    #tf.print(tf.reduce_min(y_pred_cast[:,:,:,1]))
+    #tf.print(tf.reduce_max(y_pred_cast[:,:,:,1]))
+    loss_val = (100 * (val_true - val_pred) / val_true) / quantclip
+    loss_val = tf.math.abs(tf.clip_by_value(loss_val, -1, 1))
+
+    weight_geo = tf.cast(tf.pow(tf.cast(10, tf.float32), loss_geo-loss_val), tf.float32)
+    weight_val = tf.cast(tf.pow(tf.cast(10, tf.float32), loss_val-loss_geo), tf.float32)
+
+    total_loss = (weight_geo * loss_geo + weight_val * loss_val) / 20
+
+    return total_loss
+
+def loss_log_cosh_geoquant(y_true, y_pred, **kwargs):
+    return tf.math.log(tf.math.cosh(loss_geoquant(y_true, y_pred, **kwargs)))
+
 def combined_loss(y_true, y_predict, loss_list = []):
     loss = 0
 
@@ -192,6 +220,55 @@ def metric_accuracy(y_true, y_pred):
     nr_entries = tf.reduce_prod(tf.shape(y_true))
     return equal / nr_entries
 
+def metric_geoquant(y_true, y_pred, quantclip=10):
+    y_true_cast = tf.cast(y_true, tf.float32)
+    y_pred_cast = tf.cast(y_pred, tf.float32)
+
+    # Geometric Loss
+    num = 2 * tf.reduce_sum(y_true_cast[:,:,:,1] * y_pred_cast[:,:,:,1]) + 1
+    denom = tf.reduce_sum(y_true_cast[:,:,:,1] + y_pred_cast[:,:,:,1]) + 1
+    loss_geo = 1 - num / denom
+
+    # Quantitative Loss
+    val_true = tf.reduce_sum(y_true_cast[:,:,:,1] * y_pred_cast[:,:,:,0])
+    val_pred = tf.reduce_sum(y_pred_cast[:,:,:,1] * y_pred_cast[:,:,:,0])
+
+    #tf.print(tf.reduce_min(y_pred_cast[:,:,:,1]))
+    #tf.print(tf.reduce_max(y_pred_cast[:,:,:,1]))
+    loss_val = (100 * (val_true - val_pred) / val_true) / quantclip
+    loss_val = tf.math.abs(tf.clip_by_value(loss_val, -1, 1))
+
+    weight_geo = tf.cast(tf.pow(tf.cast(10, tf.float32), loss_geo-loss_val), tf.float32)
+    weight_val = tf.cast(tf.pow(tf.cast(10, tf.float32), loss_val-loss_geo), tf.float32)
+
+    total_loss = (weight_geo * loss_geo + weight_val * loss_val) / 20
+
+    return total_loss
+
+def metric_geo(y_true, y_pred):
+    y_true_cast = tf.cast(y_true, tf.float32)
+    y_pred_cast = tf.cast(y_pred, tf.float32)
+
+    # Geometric Loss
+    num = 2 * tf.reduce_sum(tf.cast(tf.math.round(y_true_cast[:,:,:,1]), tf.int32) * tf.cast(tf.math.round(y_pred_cast[:,:,:,1]), tf.int32)) + 1
+    denom = tf.reduce_sum(tf.cast(tf.math.round(y_true_cast[:,:,:,1]), tf.int32) + tf.cast(tf.math.round(y_pred_cast[:,:,:,1]), tf.int32)) + 1
+    loss_geo = 1 - num / denom
+
+    return loss_geo
+
+def metric_quant(y_true, y_pred, quantclip=10):
+    y_true_cast = tf.cast(y_true, tf.float32)
+    y_pred_cast = tf.cast(y_pred, tf.float32)
+
+    # Quantitative Loss
+    val_true = tf.reduce_sum(tf.cast(tf.math.round(y_true_cast[:,:,:,1]), tf.float32) * y_pred_cast[:,:,:,0])
+    val_pred = tf.reduce_sum(tf.cast(tf.math.round(y_pred_cast[:,:,:,1]), tf.float32) * y_pred_cast[:,:,:,0])
+
+    loss_val = (100 * (val_true - val_pred) / val_true) / quantclip
+    loss_val = tf.cast(tf.clip_by_value(loss_val, -1, 1), tf.float32)
+
+    return tf.math.abs(loss_val)
+
 # Functions:
 def get_optimizer(optimizer, lr):
     if optimizer == "sgd":
@@ -216,16 +293,26 @@ def get_loss(loss, **kwargs):
     elif loss == "tversky":
         function = lambda y_true, y_predict: loss_tversky(y_true, y_predict, **kwargs)
     elif loss == "focal_tversky":
-        function = lambda y_true, y_predict: loss_tversky(y_true, y_predict, **kwargs)
+        function = lambda y_true, y_predict: loss_focal_tversky(y_true, y_predict, **kwargs)
+    elif loss == "geoquant":
+        function = lambda y_true, y_predict: loss_geoquant(y_true, y_predict, **kwargs)
+    elif loss == "log_cosh_geoquant":
+        function = lambda y_true, y_predict: loss_log_cosh_geoquant(y_true, y_predict, **kwargs)
     else:
         function = None
     return function
 
-def get_metric(metric):
+def get_metric(metric, **kwargs):
     if metric == "accuracy":
         function = metric_accuracy
     elif metric == "dice":
         function = metric_dice
+    elif metric == "geoquant":
+        function = metric_geoquant
+    elif metric == "geo":
+        function = metric_geo
+    elif metric == "quant":
+        function = metric_quant
     else:
         function = None
     return function
@@ -268,6 +355,51 @@ def model_unet(input_tuple, output_size, name, **kwargs):
         layers.append(x)
 
     x = Conv2D(output_size, (1, 1), activation='sigmoid', name=name + "_conv2d_out") (x)
+    layers.append(x)
+
+    return layers[0], layers[-1], layers
+
+def model_unet_geoquant(input_tuple, output_size, name, **kwargs):
+    depth = kwargs.get("depth", 6)
+    droput_rate = kwargs.get("dropoutrate", 0.2)
+    convdepth_initial = kwargs.get("convdepth_initial", 32)
+    convdepth_max = kwargs.get("convdepth_max", convdepth_initial * 2 ** (depth+1))
+
+    layers = []
+
+    x_tot = Input(input_tuple, name=name + "_input")
+    x_quant = x_tot[:,:,:,:1]
+    x = x_tot[:,:,:,1:]
+    layers.append(x_tot)
+
+    for i in range(depth+1):
+        convdepth = min(convdepth_initial*(2**i), convdepth_max)
+
+        if i >0:
+            x = MaxPooling2D((2, 2), name=name + "_maxpool_" + str(i+ 1) + "_2") (x)
+        x = Conv2D(convdepth, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', name=name + "_conv2d_" + str(i+ 1) + "_1") (x)
+        x = BatchNormalization(name=name + "_batchnorm_" + str(i+ 1) + "_1")(x)
+        x = Dropout(droput_rate, name=name + "_dropout_" + str(i+ 1) + "_1") (x)
+        x = Conv2D(convdepth, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', name=name + "_conv2d_" + str(i+ 1) + "_2") (x)
+        x = BatchNormalization(name=name + "_batchnorm_" + str(i+ 1) + "_2")(x)
+        layers.append(x)
+
+    for j in range(depth):
+        convdepth = min(convdepth_initial*(2**(i-j-1)), convdepth_max)
+
+        x = Conv2DTranspose(convdepth, (2, 2), strides=(2, 2), padding='same', name=name + "_conv2dt_" + str(i+1+j+1) + "_1") (x)
+        x = concatenate([x, layers[(depth-j)]], name=name + "_concat_" + str(i+1+j+1) + "_1")
+        x = Conv2D(convdepth, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', name=name + "_conv2d_" + str(i+1+j+1) + "_2") (x)
+        x = BatchNormalization(name=name + "_batchnorm_" + str(i+1+j+1) + "_2")(x)
+        x = Dropout(droput_rate, name=name + "_dropout_" + str(i+1+j+1) + "_2") (x)
+        x = Conv2D(convdepth, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same', name=name + "_conv2d_" + str(i+1+j+1) + "_3") (x)
+        x = BatchNormalization(name=name + "_batchnorm_" + str(i+1+j+1) + "_3")(x)
+        layers.append(x)
+
+    x = Conv2D(output_size, (1, 1), activation='sigmoid', name=name + "_conv2d_out") (x)
+    layers.append(x)
+
+    x = concatenate([x_quant, x], name=name + "_concat_out")
     layers.append(x)
 
     return layers[0], layers[-1], layers

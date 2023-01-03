@@ -4,6 +4,7 @@ import pickle
 import sys
 import copy
 import os
+from osgeo import gdal
 
 from skimage.transform import rescale, resize
 from skimage.measure import label
@@ -15,6 +16,68 @@ from rasterio.features import rasterize
 
 
 from marissa.toolbox.tools import tool_plot, tool_hadler
+
+def distance(x, y, **kwargs):
+    '''
+    Calculates the Distance
+    :param x: n x m matrix with n number of points and m dimensions
+    :param y: n x m matrix with n number of points and m dimensions
+    :param order: order of the distance calculation
+    :return: distance for each row n between x and y (n x 1 matrix)
+    '''
+    order = kwargs.get("order", 2) # Minkowski Order, standard 2 (Euclidean)
+
+
+    subtract = np.abs(np.subtract(x, y))
+    result = np.linalg.norm(subtract, ord=order, axis=1)
+    return result
+
+
+def inner_distance(x, **kwargs):
+    '''
+
+    :param x: n x m matrix of points with n rows and m dimensions
+    :return: matrix (distance of each point to each other), max(max occuring distance), min (min occuring distance)
+    '''
+    show_limits = kwargs.get("limits", False)
+
+    x_n = np.tile(x, (len(x), 1))
+    y = np.repeat(x, repeats=len(x), axis=0)
+
+    dist = distance(x_n, y, **kwargs)
+
+    matrix = np.reshape(dist, (len(x), len(x)))
+    dist_min = np.min(dist[dist.nonzero()])
+    dist_max = np.max(dist)
+
+    if show_limits:
+        return matrix, dist_min, dist_max
+    else:
+        return matrix
+
+def outer_distance(x, y, **kwargs):
+    '''
+
+    :param x: n x m matrix of points with n rows and m dimensions
+    :return: matrix (distance of each point to each other), max(max occuring distance), min (min occuring distance)
+    '''
+
+    show_limits = kwargs.get("limits", False)
+
+    x_n = np.tile(x, (len(y), 1))
+    y_n = np.repeat(y, repeats=len(x),axis=0)
+
+    dist = distance(x_n, y_n, **kwargs)
+
+    matrix = np.transpose(np.reshape(dist, (len(y), len(x))))
+    dist_min = np.min(dist[dist.nonzero()])
+    dist_max = np.max(dist)
+
+    if show_limits:
+        return matrix, dist_min, dist_max
+    else:
+        return matrix
+
 
 def read_file(str_path, start=None, stop=None):
     file = open(str_path)
@@ -570,7 +633,7 @@ def tk_button(master, command, **kwargs):
 def check_class_has_method(obj, method_name):
     return hasattr(obj, method_name) and type(getattr(obj, method_name)) == types.MethodType
 
-def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None):
+def image_augmentation(input_array, exclude=None, contour=None, return_geometric_only=False):#img, mask=None):
 
     if contour is None or type(contour) == list:
         out_contour = copy.deepcopy(contour)
@@ -582,6 +645,14 @@ def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None)
         array = np.expand_dims(array, axis=2)
     min_val = np.min(array[:,:,0])
     max_val = np.max(array[:,:,0])
+
+    if return_geometric_only:
+        if len(np.shape(input_array)) == 2:
+            out_geometry = np.expand_dims(copy.deepcopy(input_array).astype("float32"), axis=2)
+        else:
+            out_geometry = copy.deepcopy(input_array[:,:,0]).astype("float32")
+
+
     run = True
     counter = 0
 
@@ -662,6 +733,9 @@ def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None)
                 for i in range(len(out_contour)):
                     out_contour[i] = np.transpose(rot_matrix @ np.transpose(out_contour[i])[[1,0],:] + offset[:, np.newaxis])[:, [1,0]]
 
+            if return_geometric_only:
+                out_geometry = rotate(out_geometry, angle, reshape=False, order=1)
+
         # mirror
         prob=np.random.randint(0, 100)
         if prob<25 and not "mirror" in exclude_list:
@@ -673,12 +747,18 @@ def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None)
                     for i in range(len(out_contour)):
                         out_contour[i][:,0] = out_contour[i][:,0] - 2 * (out_contour[i][:,0] - float(array.shape[0] / 2))
 
+                if return_geometric_only:
+                    out_geometry = np.flip(out_geometry, axis=0)
+
             if prob == 1 or prob == 2:
                 array = np.flip(array, axis=1)
 
                 if not contour is None:
                     for i in range(len(out_contour)):
                         out_contour[i][:,1] = out_contour[i][:,1] - 2 * (out_contour[i][:,1] - float(array.shape[1] / 2))
+
+                if return_geometric_only:
+                    out_geometry = np.flip(out_geometry, axis=1)
 
         # axis downsample
         prob=np.random.randint(0, 100)
@@ -707,6 +787,9 @@ def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None)
                     out_contour[i][:,0] = out_contour[i][:,0] - int((50-size/2) * np.shape(input_array)[0] / 100)
                     out_contour[i][:,1] = out_contour[i][:,1] - int((50-size/2) * np.shape(input_array)[1] / 100)
 
+            if return_geometric_only:
+                out_geometry = out_geometry[int((50-size/2) * np.shape(input_array)[0] / 100):int((50+size/2) * np.shape(input_array)[0] / 100), int((50-size/2) * np.shape(input_array)[1] / 100):int((50+size/2) * np.shape(input_array)[1] / 100),:]
+
         array[:,:,0][array[:,:,0]>max_val] = max_val
         array[:,:,0][array[:,:,0]<min_val] = min_val
 
@@ -718,7 +801,13 @@ def image_augmentation(input_array, exclude=None, contour=None):#img, mask=None)
     if len(np.shape(input_array)) == 2:
         array = np.squeeze(array)
 
-    return array, out_contour
+    if return_geometric_only:
+        out_geometry = np.squeeze(out_geometry)
+        out_geometry[out_geometry>max_val] = max_val
+        out_geometry[out_geometry<min_val] = min_val
+        return array, out_contour, out_geometry
+    else:
+        return array, out_contour
 
 
 
@@ -933,6 +1022,44 @@ def array_resolution(array, factor):
     iarray = iarray.resize((factor * np.asarray(np.shape(array))).astype(int), Image.LINEAR) #cv2.resize(iarray, (factor * np.asarray(np.shape(array))).astype(int))
     result = np.asarray(iarray, dtype="float32").squeeze()
 
+
+    return result
+
+def rgb_to_greyscale(array):
+    result = np.array(array)
+    result = np.squeeze(result)
+
+    if len(np.shape(result)) == 3 and np.shape(result)[-1] == 3:
+        result = np.squeeze(0.3 * result[:,:,0] + 0.59 * result[:,:,1] + 0.11 * result[:,:,2])
+    else:
+        result = None
+
+    return result
+
+def get_image_sharpeness_measure(array):
+    # https://reader.elsevier.com/reader/sd/pii/S1877705813016007?token=F90A4C91FF94E4B4AE6BDC51DF8556D4DE7B5E447696DECF5305888C9EB896F5C10020D4F1702E63E2293A165D3FB401&originRegion=eu-west-1&originCreation=20221130144050
+
+    if len(np.shape(array)) == 3:
+        image = rgb_to_greyscale(array)
+    elif len(np.shape(array)) == 2:
+        image = np.copy(array)
+    else:
+        image = None
+
+    if not image is None:
+        if not np.max(image) == 0:
+            image = image / np.max(image)
+
+        F = np.fft.fft2(image)
+        Fc = np.fft.fftshift(F)
+        AF = np.abs(Fc)
+        M = np.max(AF)
+        threshold = M / 1000
+        Th = np.count_nonzero(F>threshold)
+        FM = Th / (np.shape(image)[0] * np.shape(image)[1])
+        result = FM
+    else:
+        result = None
 
     return result
 
